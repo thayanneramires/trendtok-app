@@ -1,0 +1,25 @@
+# Credenciais
+.env
+
+# Modelo treinado — versionado no MLflow/DagsHub
+data/raw/
+data/processed/
+data/models/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# MLflow
+mlruns/
+
+# Editores
+.vscode/
+.idea/
+.DS_Store
+*.log
