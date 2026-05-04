@@ -2,9 +2,22 @@
 .env
 
 # Modelo treinado — versionado no MLflow/DagsHub
-data/raw/
-data/processed/
-data/models/
+#data/raw/
+#data/processed/
+#data/models/
+
+# Dados e modelos (versionados via DVC, não Git)
+data/raw/*
+data/processed/*
+data/models/*
+
+# Permite os arquivos de rastreamento do DVC
+!data/raw/.gitignore
+!data/processed/.gitignore
+!data/models/.gitignore
+!data/raw/*.dvc
+!data/processed/*.dvc
+!data/models/*.dvc
 
 # Python
 __pycache__/

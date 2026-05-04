@@ -1,0 +1,23 @@
+stages:
+  ingestion:
+    cmd: python src/ingestion.py
+    deps:
+      - src/ingestion.py
+    outs:
+      - data/raw/b2w_reviews_original.parquet
+
+  preprocessing:
+    cmd: python src/preprocessing.py
+    deps:
+      - src/preprocessing.py
+      - data/raw/b2w_reviews_original.parquet
+    outs:
+      - data/processed/reviews_processado.parquet
+
+  train:
+    cmd: python src/train.py
+    deps:
+      - src/train.py
+      - data/processed/reviews_processado.parquet
+    outs:
+      - data/models/modelo_sentimento.pkl

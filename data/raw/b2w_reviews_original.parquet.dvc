@@ -1,0 +1,5 @@
+outs:
+- md5: 5390df0618c13bcf86c27d19ad0bb435
+  size: 30400206
+  hash: md5
+  path: b2w_reviews_original.parquet

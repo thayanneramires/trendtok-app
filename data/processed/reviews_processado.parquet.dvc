@@ -1,0 +1,5 @@
+outs:
+- md5: 615e00ccf221d9f41e7b67479d432768
+  size: 10200086
+  hash: md5
+  path: reviews_processado.parquet
