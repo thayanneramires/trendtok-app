@@ -1,37 +1,47 @@
-"""
-train.py
---------
-Treina um classificador de sentimento (TF-IDF + Logistic Regression)
-e loga tudo no MLflow. Salva o modelo em data/models/.
-"""
-
 import os
 import pickle
 import mlflow
 import mlflow.sklearn
+import dagshub
 import pandas as pd
+from dotenv import load_dotenv
+
 from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import LinearSVC
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import (
-    accuracy_score, f1_score, classification_report
-)
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.pipeline import Pipeline
 
-# ── Parâmetros (fáceis de tunar e logar no MLflow) ────────────────────────────
+# =========================
+#  Conecta com DagsHub
+# =========================
+load_dotenv()
+
+dagshub.init(
+    repo_name=os.getenv("DAGSHUB_REPO"),
+    repo_owner=os.getenv("DAGSHUB_USER"),
+    mlflow=True
+)
+
+mlflow.set_experiment("sentimento-tiktok")
+
+# =========================
+# Parâmetros
+# =========================
 PARAMS = {
     "max_features": 10000,
     "ngram_range": (1, 2),
-    "max_iter": 300,
-    "C": 1.0,
     "test_size": 0.2,
     "random_state": 42,
 }
 
-# ── 1. Carrega dados processados ──────────────────────────────────────────────
-print("Carregando dados processados...")
-df = pd.read_parquet("data/processed/reviews_processado.parquet")
-df = df.dropna()
+# =========================
+# Dados
+# =========================
+df = pd.read_parquet("data/processed/reviews_processado.parquet").dropna()
 
 X = df["texto_limpo"]
 y = df["sentimento"]
@@ -43,53 +53,80 @@ X_train, X_test, y_train, y_test = train_test_split(
     stratify=y
 )
 
-print(f"Treino: {len(X_train)} | Teste: {len(X_test)}")
+# =========================
+# Modelos 
+# =========================
+models = {
+    "logistic_regression": LogisticRegression(max_iter=300, C=1.0),
+    "naive_bayes": MultinomialNB(),
+    "svm": LinearSVC()
+}
 
-# ── 2. Pipeline TF-IDF + Regressão Logística ─────────────────────────────────
-pipeline = Pipeline([
-    ("tfidf", TfidfVectorizer(
-        max_features=PARAMS["max_features"],
-        ngram_range=PARAMS["ngram_range"],
-        sublinear_tf=True
-    )),
-    ("clf", LogisticRegression(
-        max_iter=PARAMS["max_iter"],
-        C=PARAMS["C"],
-        class_weight="balanced"
-    ))
-])
+best_f1 = 0
+best_model = None
+best_name = ""
 
-# ── 3. Treina com MLflow tracking ─────────────────────────────────────────────
-mlflow.set_experiment("sentimento-tiktok")
+# =========================
+# Treinamento
+# =========================
+for name, model in models.items():
 
-with mlflow.start_run():
-    print("\nTreinando modelo...")
-    pipeline.fit(X_train, y_train)
+    with mlflow.start_run(run_name=name):
 
-    y_pred = pipeline.predict(X_test)
+        pipeline = Pipeline([
+            ("tfidf", TfidfVectorizer(
+                max_features=PARAMS["max_features"],
+                ngram_range=PARAMS["ngram_range"]
+            )),
+            ("clf", model)
+        ])
 
-    acc = accuracy_score(y_test, y_pred)
-    f1  = f1_score(y_test, y_pred, average="weighted")
+        pipeline.fit(X_train, y_train)
+        y_pred = pipeline.predict(X_test)
 
-    # Loga parâmetros e métricas
-    mlflow.log_params(PARAMS)
-    mlflow.log_metric("accuracy", acc)
-    mlflow.log_metric("f1_weighted", f1)
+        acc = accuracy_score(y_test, y_pred)
+        f1  = f1_score(y_test, y_pred, average="weighted")
 
-    # Loga o modelo
-    mlflow.sklearn.log_model(pipeline, "modelo_sentimento")
+        # Logs
+        mlflow.log_params(PARAMS)
+        mlflow.log_param("model_type", name)
 
-    print(f"\nAcurácia : {acc:.4f}")
-    print(f"F1 Score : {f1:.4f}")
-    print(f"\n{classification_report(y_test, y_pred)}")
+        mlflow.log_metric("accuracy", acc)
+        mlflow.log_metric("f1_weighted", f1)
 
-    run_id = mlflow.active_run().info.run_id
-    print(f"\nRun ID MLflow: {run_id}")
+        mlflow.set_tag("project", "trendtok")
+        mlflow.set_tag("task", "sentiment-analysis")
 
-# ── 4. Salva modelo localmente para deploy ────────────────────────────────────
+        # Artefato (modelo)
+        mlflow.sklearn.log_model(pipeline, "model")
+
+        print(f"{name} | Acc: {acc:.4f} | F1: {f1:.4f}")
+
+        # Guarda melhor modelo
+        if f1 > best_f1:
+            best_f1 = f1
+            best_model = pipeline
+            best_name = name
+
+# =========================
+# Registrar melhor modelo
+# =========================
+with mlflow.start_run(run_name="best_model"):
+
+    mlflow.sklearn.log_model(
+        best_model,
+        "best_model",
+        registered_model_name="sentimento_tiktok_model"
+    )
+
+print(f"\nMelhor modelo: {best_name} (F1={best_f1:.4f})")
+
+# =========================
+# Salvar local
+# =========================
 os.makedirs("data/models", exist_ok=True)
-with open("data/models/modelo_sentimento.pkl", "wb") as f:
-    pickle.dump(pipeline, f)
 
-print("\nModelo salvo em data/models/modelo_sentimento.pkl")
-print("Treinamento concluído!")
+with open("data/models/modelo_sentimento.pkl", "wb") as f:
+    pickle.dump(best_model, f)
+
+print("Modelo salvo localmente.")

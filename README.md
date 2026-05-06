@@ -1,11 +1,11 @@
-# 📊 TrendTok — Inteligência de Hype e Sentimento
+# TrendTok — Inteligência de Hype e Sentimento
 
 Radar de tendências com análise de sentimento de comentários do TikTok.
-Identifica produtos em alta e classifica se o que falam é positivo, negativo ou neutro.
+Identifica produtos em alta e classifica o que as pessoas falam como positivo, negativo ou neutro.
 
 ---
 
-## 🏗️ Arquitetura
+## Arquitetura
 
 ```
 [API TikTok] → [Supabase] → [DuckDB] → [Feature Engineering]
@@ -19,23 +19,24 @@ Identifica produtos em alta e classifica se o que falam é positivo, negativo ou
 
 ---
 
-## 🚀 Como rodar localmente
+## Como rodar localmente
 
 ### 1. Clone e instale as dependências
 
 ```bash
 git clone <seu-repositorio>
-cd projeto-final
+cd trendtok-app
 pip install -r requirements.txt
 ```
 
 ### 2. Configure as variáveis de ambiente
 
-Crie um arquivo `.env` na raiz:
+Crie um arquivo `.env` na raiz do projeto:
 
 ```env
 SUPABASE_URL=https://xxxx.supabase.co
 SUPABASE_KEY=sua_chave_aqui
+TIKTOK_API_HOST=tiktok-video-no-watermark2.p.rapidapi.com
 TIKTOK_API_KEY=sua_chave_tiktok
 ```
 
@@ -64,64 +65,47 @@ python src/train.py
 dvc repro
 ```
 
-### 5. Veja os experimentos no MLflow
+### 5. Rode o app
 
 ```bash
-mlflow ui
-# Acesse http://localhost:5000
-```
-
-### 6. Rode o app
-
-```bash
-streamlit run app/streamlit_app.py
+streamlit run app/app.py
 ```
 
 ---
 
-## 🐳 Rodando com Docker
+## Rodando com Docker
 
 ```bash
-docker build -t tiktok-analyzer .
-docker run -p 8501:8501 --env-file .env tiktok-analyzer
+docker build -t trendtok-app .
+docker run -p 8501:8501 --env-file .env trendtok-app
 ```
+
+Acesse em `http://localhost:8501`.
 
 ---
 
-## 📁 Estrutura do projeto
+## Estrutura do projeto
 
 ```
-projeto-final/
+trendtok-app/
 ├── data/
 │   ├── raw/                  # Dados brutos (versionados via DVC)
 │   ├── processed/            # Dados processados
-│   └── models/               # Modelo treinado
-├── notebooks/                # EDA exploratória
+│   └── models/               # Modelo treinado (.pkl)
 ├── src/
-│   ├── ingestion.py          # Ingestão: HuggingFace → Supabase
+│   ├── ingestion.py          # Ingestão de dados → Supabase
 │   ├── preprocessing.py      # Feature engineering com DuckDB
 │   ├── train.py              # Treinamento + MLflow tracking
-│   └── predict.py            # Inferência
+│   └── predict.py            # Inferência de sentimento
 ├── app/
-│   └── streamlit_app.py      # Interface do usuário
+│   ├── app.py                # Interface Streamlit
+│   ├── utils.py              # Funções auxiliares e busca de dados
+│   └── capa.png              # Imagem de capa
+├── .dockerignore
+├── .env                      # Variáveis de ambiente 
+├── .gitignore
 ├── Dockerfile
-├── requirements.txt
 ├── dvc.yaml                  # Pipeline DVC
+├── requirements.txt
 └── README.md
 ```
-
----
-
-## 🛠️ Stack
-
-| Ferramenta | Papel |
-|---|---|
-| TikTok API | Fonte de dados (comentários e views) |
-| Supabase | Armazenamento dos dados brutos |
-| DuckDB | Queries analíticas e feature engineering |
-| scikit-learn | Modelo TF-IDF + Logistic Regression |
-| MLflow | Tracking de experimentos |
-| DVC + DagsHub | Versionamento de dados e modelos |
-| Docker | Containerização |
-| Render | Deploy em produção |
-| Streamlit | Interface interativa |
