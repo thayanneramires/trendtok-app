@@ -34,7 +34,15 @@ Escolhemos o Supabase para guardar os comentários brutos porque ele entrega um 
 
 Para o feature engineering usamos DuckDB, que permite escrever SQL diretamente sobre os DataFrames sem precisar subir nenhum servidor. Comparado a chains longas de pandas, o código ficou bem mais legível e o processamento mais rápido.
 
-Treinamos três modelos e comparamos tudo no MLflow: Logistic Regression como baseline, Random Forest e XGBoost. O XGBoost teve o melhor F1-macro na validação e foi o registrado no Model Registry como modelo de produção.
+Treinamos três modelos e comparamos tudo no MLflow: Logistic Regression como baseline, Naive Bayes e SVM. Os resultados de validação foram os seguintes:
+
+| Modelo               | Accuracy | F1 Weighted |
+|----------------------|----------|-------------|
+| Logistic Regression  | 0.8455   | 0.8262      |
+| SVM                  | 0.8420   | 0.8230      |
+| Naive Bayes          | 0.8226   | 0.8030      |
+
+A Logistic Regression teve o melhor desempenho nos dois indicadores e foi o modelo registrado no Model Registry como modelo de produção.
 
 Um detalhe importante foi o balanceamento das classes. Comentários neutros são maioria nos dados coletados, e sem tratar isso o modelo simplesmente ignoraria as classes menores. Aplicamos SMOTE só no conjunto de treino para não vazar informação para a validação.
 
