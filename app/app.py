@@ -23,6 +23,9 @@ st.markdown("""
         background-color: #8B1A1A !important;
         background-image: none !important;
     }
+    .hype-cover h1 {
+        color: white !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
