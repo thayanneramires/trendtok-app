@@ -6,7 +6,6 @@ Aplicativo Streamlit para analisar as tendências e o sentimento do público sob
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import base64
 import utils 
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
@@ -14,28 +13,18 @@ from predict import prever_sentimento, resumo_sentimentos
 
 TEMA_COR = "#E02E30"
 
-st.set_page_config(
-    page_title="TrendTok", 
-    page_icon="🔍",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-
 # ESTILOS CSS 
-try: 
-    img_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" 
-    try:
-        with open(os.path.join(os.path.dirname(__file__), "capa.png"), "rb") as f:
-            img_base64 = base64.b64encode(f.read()).decode()
-    except FileNotFoundError:
-        pass 
-except Exception as e:
-    st.error(f"Erro ao carregar a imagem de capa: {e}")
-    img_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-
-css_styles = utils.load_css_styles(img_base64, TEMA_COR)
+css_styles = utils.load_css_styles("", TEMA_COR)
 st.markdown(css_styles, unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+    .hype-cover {
+        background-color: #8B1A1A !important;
+        background-image: none !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 st.markdown("""
 <style>
@@ -88,7 +77,12 @@ def main():
     # CAPA
     st.markdown("""
     <div class="hype-cover">
-        <h1>TrendTok</h1>
+        <h1>
+            <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 10px;">
+                <path d="M34.1 5A9.1 9.1 0 0 0 43 14h-4a5.1 5.1 0 0 1-4.9-5V5h-4v26a5 5 0 1 1-5-5 5 5 0 0 1 1.5.2V22a9 9 0 1 0 7.5 8.9V16.5A17.1 17.1 0 0 0 44 18v-4a13.1 13.1 0 0 1-9.9-9z" fill="white"/>
+            </svg>
+            TrendTok
+        </h1>
     </div>
     """, unsafe_allow_html=True)
 
