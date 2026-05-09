@@ -126,8 +126,7 @@ trendtok-app/
 │   └── predict.py            # Inferência de sentimento
 ├── app/
 │   ├── app.py                # Interface Streamlit
-│   ├── utils.py              # Funções auxiliares e busca de dados
-│   └── capa.png              # Imagem de capa
+│   └── utils.py              # Funções auxiliares e busca de dados
 ├── .dockerignore
 ├── .gitignore
 ├── Dockerfile
